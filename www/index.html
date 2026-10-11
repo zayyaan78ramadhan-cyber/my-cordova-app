@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Aplikasi Rekap Data Gate PRO</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Google Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Cropper.js CDN for Image Cropping -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <!-- Tesseract.js fallback -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            },
+            dark: {
+              bg: '#090d16',
+              card: '#111827',
+              border: '#1f2937',
+              input: '#030712'
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['Inter', 'sans-serif']
+          },
+          boxShadow: {
+            'glow-emerald': '0 0 20px rgba(16, 185, 129, 0.25)',
+            'glow-screen': 'inset 0 0 20px rgba(0,0,0,0.8), 0 0 15px rgba(16, 185, 129, 0.15)',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #090d16;
+      color: #f3f4f6;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .lcd-screen {
+      background: radial-gradient(circle at center, #112d1f 0%, #08170f 100%);
+      border: 2px solid #1f4e35;
+      box-shadow: inset 0 0 25px rgba(0,0,0,0.85), 0 8px 20px rgba(0,0,0,0.5), 0 0 10px rgba(16, 185, 129, 0.1);
+      position: relative;
+    }
+
+    .lcd-screen::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    .screen-input {
+      background: rgba(0, 0, 0, 0.65);
+      border: 1.5px solid #276947;
+      color: #34d399;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 8px;
+      padding: 8px 4px;
+      width: 100%;
+      outline: none;
+      transition: all 0.2s ease;
+      position: relative;
+      z-index: 5;
+      letter-spacing: 0.05em;
+    }
+
+    .screen-input:focus {
+      background: rgba(0, 0, 0, 0.9);
+      border-color: #facc15;
+      color: #facc15;
+      box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
+      transform: translateY(-1px);
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .interactive-btn {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .interactive-btn:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12 select-none antialiased">
+
+  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 shadow-xl">
+    <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-tr from-emerald-600 to-teal-400 rounded-2xl flex items-center justify-center text-slate-950 font-black shadow-glow-emerald">
+          <i class="fa-solid fa-torii-gate text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-black text-base tracking-wider text-white leading-tight flex items-center gap-1.5">
+            REKAP GATE <span class="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-bold">OCR SPACE</span>
+          </h1>
+          <p class="text-[11px] text-slate-400 font-medium">Pemindai Struk Gate Digital</p>
+        </div>
+      </div>
+      
+      <div class="flex gap-2">
+        <button onclick="toggleSettingsModal()" class="w-9 h-9 bg-slate-800/90 hover:bg-slate-700/90 active:scale-95 transition rounded-xl flex items-center justify-center text-amber-400 border border-slate-700/60 shadow-inner">
+          <i class="fa-solid fa-gear text-base"></i>
+        </button>
+        <button onclick="toggleHelpModal()" class="w-9 h-9 bg-slate-800/90 hover:bg-slate-700/90 active:scale-95 transition rounded-xl flex items-center justify-center text-emerald-400 border border-slate-700/60 shadow-inner">
+          <i class="fa-solid fa-circle-question text-base"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-md mx-auto px-3.5 pt-4 space-y-4">
+
+    <!-- HEADER LAPORAN -->
+    <section class="bg-slate-900/70 backdrop-blur-md rounded-2xl p-4 border border-slate-800/80 shadow-lg space-y-3">
+      <div class="flex justify-between items-center border-b border-slate-800/80 pb-2.5">
+        <span class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+          <i class="fa-solid fa-map-pin text-emerald-400"></i> Header Laporan
+        </span>
+        <button onclick="toggleHeaderDetails()" class="text-[11px] font-bold text-emerald-400 bg-emerald-950/60 hover:bg-emerald-900/60 px-2.5 py-1 rounded-lg border border-emerald-700/40 transition">
+          <span id="btnToggleHeaderLabel">Sembunyikan</span>
+        </button>
+      </div>
+
+      <div id="headerDetailsForm" class="grid grid-cols-2 gap-3 text-xs">
+        <div>
+          <div class="h-6 flex items-center mb-1.5">
+            <label class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Nama Halte</label>
+          </div>
+          <div class="relative">
+            <input type="text" id="infoHalte" oninput="saveHeaderInfo()" placeholder="Misal: Tosari" class="w-full bg-slate-950/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-3 py-2 text-slate-100 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition">
+          </div>
+        </div>
+        <div>
+          <div class="h-6 flex justify-between items-center mb-1.5">
+            <label class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Jam Data</label>
+            <div class="flex gap-1.5">
+              <button type="button" onclick="setPresetTime('23.59')" class="text-[10px] font-bold text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-800/50 hover:bg-emerald-900">23.59</button>
+              <button type="button" onclick="setCurrentTime()" class="text-[10px] font-bold text-amber-400 bg-amber-950 px-1.5 py-0.5 rounded border border-amber-800/50 hover:bg-amber-900">Live</button>
+            </div>
+          </div>
+          <input type="text" id="infoJam" oninput="saveHeaderInfo()" placeholder="Misal: 23.59" class="w-full bg-slate-950/80 border border-slate-700/80 focus:border-emerald-500 rounded-xl px-3 py-2 text-slate-100 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition">
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB GATE SELECTOR -->
+    <section class="bg-slate-900/70 backdrop-blur-md p-3 rounded-2xl border border-slate-800/80 shadow-md">
+      <div class="flex justify-between items-center mb-2.5 px-1">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <i class="fa-solid fa-bars-staggered text-emerald-400"></i> Pilih Gate
+        </span>
+        <span id="activeGateLabel" class="text-xs font-black text-emerald-400 bg-emerald-950/90 px-3 py-1 rounded-full border border-emerald-500/40 shadow-sm">
+          GATE 1
+        </span>
+      </div>
+
+      <div class="flex space-x-2 overflow-x-auto no-scrollbar py-1" id="gateTabsContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- MODUL PEMINDAI FOTO STRUK -->
+    <section class="bg-slate-900/70 backdrop-blur-md rounded-2xl p-4 border border-slate-800/80 shadow-lg space-y-3">
+      <div class="flex justify-between items-center">
+        <span class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+          <i class="fa-solid fa-camera text-emerald-400"></i> Scan Struk <span id="scanGateTitle" class="text-emerald-400 font-extrabold">GATE 1</span>
+        </span>
+        <div class="flex gap-1.5">
+          <button id="btnCropTrigger" onclick="openCropModal()" class="hidden text-[11px] font-bold text-amber-300 bg-amber-950/80 hover:bg-amber-900/80 px-2.5 py-1 rounded-lg border border-amber-700/50 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-crop-simple"></i> Potong Layar
+          </button>
+          <button onclick="triggerFileSelect()" class="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 hover:bg-emerald-900/80 px-2.5 py-1 rounded-lg border border-emerald-700/50 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-upload"></i> Unggah / Foto
+          </button>
+        </div>
+      </div>
+
+      <input type="file" id="gateImageInput" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
+
+      <div id="imagePreviewContainer" class="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-950 min-h-[140px] flex items-center justify-center">
+        <img id="imagePreview" class="max-h-56 w-auto object-contain hidden" alt="Struk Gate">
+        <div id="imagePlaceholder" onclick="triggerFileSelect()" class="text-center p-6 cursor-pointer space-y-2">
+          <div class="w-12 h-12 rounded-full bg-slate-800/80 border border-slate-700 flex items-center justify-center mx-auto text-emerald-400 text-xl shadow-inner">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <p class="text-xs text-slate-300 font-semibold">Pilih atau foto layar LCD gate</p>
+          <p class="text-[10px] text-slate-500">Bisa dari Galeri HP atau Kamera</p>
+        </div>
+      </div>
+
+      <button id="btnScanImage" onclick="processImageOCR()" class="interactive-btn w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50">
+        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i> Pindai & Isikan Angka Otomatis
+      </button>
+
+      <div id="scanStatus" class="hidden bg-slate-950/90 border border-emerald-500/30 rounded-xl p-3 text-center space-y-2">
+        <div class="inline-block animate-spin text-emerald-400 text-lg">
+          <i class="fa-solid fa-circle-notch"></i>
+        </div>
+        <p id="scanStatusMsg" class="text-xs font-bold text-emerald-300">Mengirim ke OCR.Space Engine 2...</p>
+      </div>
+    </section>
+
+    <!-- FORM INPUT GATE SIMULATOR -->
+    <section class="bg-slate-900/70 backdrop-blur-md rounded-2xl p-4 border border-slate-800/80 shadow-lg space-y-3">
+      <div class="flex justify-between items-center mb-1">
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+          <h2 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Layar Simulator <span id="screenGateTitle" class="text-emerald-400 font-black">GATE 1</span></h2>
+        </div>
+        <button onclick="clearCurrentGate()" class="text-[11px] font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/50 active:scale-95 px-2.5 py-1 rounded-xl border border-rose-800/40 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-rotate-left text-[10px]"></i> Reset Gate Ini
+        </button>
+      </div>
+
+      <!-- SIMULATOR TAMPILAN MESIN GATE -->
+      <div class="lcd-screen rounded-2xl p-4 space-y-4 text-xs">
+        
+        <!-- BARIS QR CODE -->
+        <div class="space-y-1.5 relative z-10">
+          <div class="flex items-center justify-between font-mono font-bold text-emerald-200">
+            <span class="bg-emerald-950/90 text-amber-300 px-2 py-0.5 rounded border border-emerald-600/60 shadow-sm text-[11px]">QR</span>
+            <span class="text-[10px] text-emerald-400/80 font-semibold">[QR1] + [QR2] / [QR3]</span>
+          </div>
+          <div class="flex items-center gap-1.5 font-mono font-bold">
+            <input type="number" id="qr_1" data-next="qr_2" oninput="saveCurrentInput()" placeholder="0000" class="screen-input auto-advance">
+            <span class="text-emerald-400 text-sm font-black">+</span>
+            <input type="number" id="qr_2" data-next="qr_3" oninput="saveCurrentInput()" placeholder="0000" class="screen-input auto-advance">
+            <span class="text-emerald-400 text-sm font-black">/</span>
+            <input type="number" id="qr_3" data-next="t_b1" oninput="saveCurrentInput()" placeholder="0000" class="screen-input auto-advance">
+          </div>
+        </div>
+
+        <!-- BARIS T (TAP) -->
+        <div class="space-y-1.5 relative z-10">
+          <div class="flex items-center justify-between font-mono font-bold text-emerald-200">
+            <span class="bg-emerald-950/90 text-amber-300 px-2 py-0.5 rounded border border-emerald-600/60 shadow-sm text-[11px]">T</span>
+            <span class="text-[10px] text-emerald-400/80 font-semibold">[B1] + [B2] + [S] / [OUT]</span>
+          </div>
+          <div class="flex items-center gap-1 font-mono font-bold">
+            <input type="number" id="t_b1" data-next="t_b2" oninput="saveCurrentInput()" placeholder="0000" class="screen-input auto-advance">
+            <span class="text-emerald-400 text-xs font-black">+</span>
+            <input type="number" id="t_b2" data-next="t_s" oninput="saveCurrentInput()" placeholder="0000" class="screen-input auto-advance">
+            <span class="text-emerald-400 text-xs font-black">+</span>
+            <input type="number" id="t_s" data-next="t_out" oninput="saveCurrentInput()" placeholder="0000" class="screen-input auto-advance">
+            <span class="text-emerald-400 text-xs font-black">/</span>
+            <input type="number" id="t_out" data-next="k_1" oninput="saveCurrentInput()" placeholder="0000" class="screen-input auto-advance">
+          </div>
+        </div>
+
+        <!-- BARIS K (KARTU) -->
+        <div class="space-y-1.5 relative z-10">
+          <div class="flex items-center justify-between font-mono font-bold text-emerald-200">
+            <span class="bg-emerald-950/90 text-amber-300 px-2 py-0.5 rounded border border-emerald-600/60 shadow-sm text-[11px]">K</span>
+            <span class="text-[10px] text-emerald-400/80 font-semibold">[K1] / [K2]</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 font-mono font-bold">
+            <input type="number" id="k_1" data-next="k_2" oninput="saveCurrentInput()" placeholder="0000" class="screen-input auto-advance">
+            <input type="number" id="k_2" data-next="NEXT_GATE" oninput="saveCurrentInput()" placeholder="0000" class="screen-input auto-advance">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- NAVIGASI GATE PREV/NEXT -->
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button id="btnPrevGate" onclick="changeGate(-1)" class="interactive-btn py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs border border-slate-700 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-arrow-left text-[11px]"></i> Gate Prev
+        </button>
+        <button id="btnNextGate" onclick="changeGate(1)" class="interactive-btn py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md">
+          Gate Next <i class="fa-solid fa-arrow-right text-[11px]"></i>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- RINGKASAN DATA PER GATE -->
+    <section class="bg-slate-900/70 backdrop-blur-md rounded-2xl p-4 border border-slate-800/80 shadow-lg space-y-3">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-table-cells text-emerald-400 text-sm"></i>
+          <h2 class="text-xs font-bold text-slate-100 uppercase tracking-wider">Ringkasan Angka Per Gate</h2>
+        </div>
+        <button onclick="toggleBreakdownTable()" class="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 hover:bg-emerald-900/80 px-3 py-1 rounded-lg border border-emerald-700/50 transition">
+          <span id="btnToggleBreakdownLabel">Lihat Tabel</span>
+        </button>
+      </div>
+
+      <div id="breakdownContainer" class="hidden overflow-x-auto pt-2">
+        <table class="w-full text-left text-[11px] font-mono border-collapse rounded-xl overflow-hidden">
+          <thead>
+            <tr class="bg-slate-800 text-emerald-400 border-b border-slate-700">
+              <th class="p-2 text-center">GATE</th>
+              <th class="p-2 text-center">B</th>
+              <th class="p-2 text-center">S</th>
+              <th class="p-2 text-center">QR1/2</th>
+              <th class="p-2 text-center">OUT</th>
+              <th class="p-2 text-center">K2</th>
+              <th class="p-2 text-center">AKSI</th>
+            </tr>
+          </thead>
+          <tbody id="breakdownTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- WHATSAPP FORMAT & REKAP -->
+    <section class="bg-slate-900/70 backdrop-blur-md rounded-2xl p-4 border border-slate-800/80 shadow-lg space-y-3">
+      <div class="flex justify-between items-center border-b border-slate-800/80 pb-2.5">
+        <div class="flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp text-emerald-400 text-xl"></i>
+          <h2 class="text-xs font-bold text-slate-100 uppercase tracking-wider">Format WhatsApp</h2>
+        </div>
+        <span class="text-[10px] font-extrabold bg-emerald-950 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/30">
+          Otomatis
+        </span>
+      </div>
+
+      <!-- PRATINJAU BUBBLE CHAT WA -->
+      <div class="bg-[#0b141a] rounded-xl p-4 border border-emerald-900/30 font-mono shadow-inner relative group">
+        <div class="absolute top-2 right-2 text-[10px] text-emerald-500/50 font-sans font-bold">PREVIEW WA</div>
+        <pre id="waPreviewText" class="text-sm leading-relaxed text-slate-100 whitespace-pre font-mono select-text m-0 tracking-wide"></pre>
+      </div>
+
+      <!-- BUTTON AKSI WHATSAPP -->
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button onclick="sendToWhatsApp()" class="interactive-btn py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50">
+          <i class="fa-brands fa-whatsapp text-lg"></i> Kirim Ke WA
+        </button>
+        <button onclick="copyToClipboard()" class="interactive-btn py-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold rounded-xl text-xs flex items-center justify-center gap-2 border border-slate-700">
+          <i class="fa-solid fa-copy text-emerald-400"></i> Salin Teks
+        </button>
+      </div>
+
+      <button onclick="openConfirmResetModal()" class="interactive-btn w-full py-2.5 bg-rose-950/30 hover:bg-rose-900/50 text-rose-400 font-bold rounded-xl text-xs border border-rose-900/40 flex items-center justify-center gap-2 transition">
+        <i class="fa-solid fa-trash-can"></i> Reset Semua Data
+      </button>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL POTONG FOTO (CROPPER) -->
+  <div id="cropModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col justify-between p-4">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+      <h3 class="font-extrabold text-slate-100 text-sm flex items-center gap-2">
+        <i class="fa-solid fa-crop-simple text-amber-400"></i> Potong Area Layar LCD Struk
+      </h3>
+      <button onclick="closeCropModal()" class="text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <div class="flex-1 my-3 overflow-hidden rounded-xl bg-black border border-slate-800 flex items-center justify-center">
+      <img id="cropperImage" class="max-h-[60vh] w-auto object-contain">
+    </div>
+
+    <div class="grid grid-cols-2 gap-2">
+      <button onclick="closeCropModal()" class="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs border border-slate-700">
+        Batal
+      </button>
+      <button onclick="applyCroppedImage()" class="py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs shadow-lg flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-check text-sm"></i> Gunakan Hasil Potongan
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL PENGATURAN API KEY -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-4 border border-slate-700 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-extrabold text-slate-100 text-sm flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-amber-400"></i> Pengaturan Mesin OCR
+        </h3>
+        <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Pilih Mesin OCR Utama</label>
+          <select id="ocrEngineSelect" onchange="toggleEngineInputs()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-semibold focus:outline-none focus:border-emerald-500">
+            <option value="ocrspace">OCR.Space API (K87037096588957)</option>
+            <option value="gemini">Gemini AI Vision</option>
+            <option value="tesseract">Tesseract Region (Lokal)</option>
+          </select>
+        </div>
+
+        <div id="ocrspaceInputGroup">
+          <label class="block text-slate-300 font-bold mb-1">OCR.Space API Key</label>
+          <input type="text" id="ocrSpaceApiKey" placeholder="K87037096588957" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-[11px] focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div id="geminiInputGroup" class="hidden">
+          <label class="block text-slate-300 font-bold mb-1">Gemini API Key</label>
+          <input type="text" id="geminiApiKey" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-[11px] focus:outline-none focus:border-emerald-500">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="toggleSettingsModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs border border-slate-700">
+          Batal
+        </button>
+        <button onclick="saveSettings()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-md">
+          Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL WARNING GATE KOSONG -->
+  <div id="emptyGateModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-4 border border-amber-500/50 shadow-2xl text-center">
+      <div class="w-12 h-12 bg-amber-950 text-amber-400 border border-amber-800/80 rounded-full flex items-center justify-center mx-auto text-xl shadow-lg">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 class="font-extrabold text-slate-100 text-sm">Gate <span id="emptyGateModalGateNum">2</span> Masih Kosong</h3>
+        <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">
+          Anda belum memasukkan data angka pada <strong class="text-amber-400">GATE <span id="emptyGateModalGateNumText">2</span></strong>. Yakin ingin melanjutkan ke <strong class="text-emerald-400">GATE <span id="emptyGateModalTargetNum">3</span></strong>?
+        </p>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button onclick="closeEmptyGateModal()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs border border-slate-700">
+          Kembali Isi
+        </button>
+        <button onclick="proceedToTargetGate()" class="py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs shadow-md">
+          Lanjut Saja
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PANDUAN -->
+  <div id="helpModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-4 border border-slate-700 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-extrabold text-slate-100 text-sm flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-emerald-400"></i> Panduan Penggunaan
+        </h3>
+        <button onclick="toggleHelpModal()" class="text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="space-y-3 text-xs text-slate-300 leading-relaxed max-h-80 overflow-y-auto pr-1">
+        <p><strong>1. Pindai Otomatis:</strong> Unggah foto struk, lalu potong area layar jika diperlukan. Klik "Pindai & Isikan Angka Otomatis".</p>
+        <p><strong>2. Header Laporan:</strong> Masukkan Nama Halte dan Jam Data di bagian paling atas.</p>
+        <p><strong>3. Gate Tanpa Batas:</strong> Jumlah gate tidak dibatasi. Gate baru akan otomatis muncul ketika Anda berpindah ke gate berikutnya.</p>
+        <p><strong>4. Navigasi Cepat (Enter):</strong> Tekan tombol <kbd class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 font-mono text-[10px]">Enter</kbd> pada HP/PC untuk otomatis berpindah ke kotak input berikutnya.</p>
+        <p><strong>5. Kirim Pesan:</strong> Tekan "Kirim Ke WA" atau "Salin Teks" untuk mengambil format rekap otomatis.</p>
+      </div>
+      <button onclick="toggleHelpModal()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-md">
+        Mengerti
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL KONFIRMASI RESET -->
+  <div id="confirmResetModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-4 border border-rose-900/60 shadow-2xl text-center">
+      <div class="w-12 h-12 bg-rose-950 text-rose-500 border border-rose-800/80 rounded-full flex items-center justify-center mx-auto text-xl shadow-lg">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 class="font-extrabold text-slate-100 text-sm">Hapus Semua Data Gate?</h3>
+        <p class="text-xs text-slate-400 mt-1.5">Tindakan ini akan mengosongkan seluruh angka masukan dari seluruh Gate.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button onclick="closeConfirmResetModal()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs border border-slate-700">
+          Batal
+        </button>
+        <button onclick="executeResetAllGates()" class="py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs shadow-md">
+          Ya, Hapus Semua
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFIKASI -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-extrabold text-xs px-5 py-3 rounded-full shadow-2xl opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center gap-2">
+    <i class="fa-solid fa-circle-check text-sm"></i>
+    <span id="toastMsg">Notifikasi</span>
+  </div>
+
+  <script>
+    let activeGate = 1;
+    let maxUnlockedGate = 2;
+    let pendingTargetGate = null;
+
+    let appData = {};
+    let headerInfo = {
+      halte: 'Tosari',
+      jam: '23.59'
+    };
+
+    let ocrSettings = {
+      engine: 'ocrspace',
+      ocrSpaceKey: 'K87037096588957',
+      geminiKey: ''
+    };
+
+    let selectedImageBase64 = null;
+    let rawUploadedBase64 = null;
+    let cropperInstance = null;
+
+    function initAppData() {
+      const savedData = localStorage.getItem('gate_rekap_data_app');
+      if (savedData) {
+        try {
+          appData = JSON.parse(savedData);
+        } catch(e) {
+          createEmptyAppData();
+        }
+      } else {
+        createEmptyAppData();
+      }
+
+      let highestWithData = 1;
+      Object.keys(appData).forEach(gateKey => {
+        const keyNum = parseInt(gateKey);
+        if (checkGateHasData(keyNum) && keyNum > highestWithData) {
+          highestWithData = keyNum;
+        }
+      });
+      maxUnlockedGate = Math.max(2, highestWithData + 1);
+
+      const savedHeader = localStorage.getItem('gate_rekap_header_info');
+      if (savedHeader) {
+        try { headerInfo = JSON.parse(savedHeader); } catch(e) {}
+      }
+
+      const savedSettings = localStorage.getItem('gate_rekap_ocr_settings');
+      if (savedSettings) {
+        try { 
+          const parsed = JSON.parse(savedSettings);
+          ocrSettings.engine = parsed.engine || 'ocrspace';
+          ocrSettings.ocrSpaceKey = parsed.ocrSpaceKey || 'K87037096588957';
+          ocrSettings.geminiKey = parsed.geminiKey || '';
+        } catch(e) {}
+      }
+
+      loadHeaderInfoToUI();
+      syncSettingsUI();
+    }
+
+    function createEmptyAppData() {
+      appData = {};
+      appData[1] = getEmptyGateObj();
+      appData[2] = getEmptyGateObj();
+    }
+
+    function getEmptyGateObj() {
+      return {
+        qr_1: '', qr_2: '', qr_3: '',
+        t_b1: '', t_b2: '', t_s: '', t_out: '',
+        k_1: '', k_2: '',
+        image: null
+      };
+    }
+
+    function loadHeaderInfoToUI() {
+      document.getElementById('infoHalte').value = headerInfo.halte || '';
+      document.getElementById('infoJam').value = headerInfo.jam || '';
+    }
+
+    function saveHeaderInfo() {
+      headerInfo = {
+        halte: document.getElementById('infoHalte').value,
+        jam: document.getElementById('infoJam').value
+      };
+      localStorage.setItem('gate_rekap_header_info', JSON.stringify(headerInfo));
+      saveDataAndCalculate();
+    }
+
+    function setPresetTime(val) {
+      document.getElementById('infoJam').value = val;
+      saveHeaderInfo();
+    }
+
+    function setCurrentTime() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('infoJam').value = `${hh}.${mm}`;
+      saveHeaderInfo();
+    }
+
+    function toggleHeaderDetails() {
+      const form = document.getElementById('headerDetailsForm');
+      const label = document.getElementById('btnToggleHeaderLabel');
+      form.classList.toggle('hidden');
+      label.innerText = form.classList.contains('hidden') ? 'Tampilkan' : 'Sembunyikan';
+    }
+
+    function syncSettingsUI() {
+      document.getElementById('ocrEngineSelect').value = ocrSettings.engine;
+      document.getElementById('ocrSpaceApiKey').value = ocrSettings.ocrSpaceKey || 'K87037096588957';
+      document.getElementById('geminiApiKey').value = ocrSettings.geminiKey || '';
+      toggleEngineInputs();
+    }
+
+    function toggleEngineInputs() {
+      const engine = document.getElementById('ocrEngineSelect').value;
+      document.getElementById('ocrspaceInputGroup').classList.toggle('hidden', engine !== 'ocrspace');
+      document.getElementById('geminiInputGroup').classList.toggle('hidden', engine !== 'gemini');
+    }
+
+    function toggleSettingsModal() {
+      const modal = document.getElementById('settingsModal');
+      modal.classList.toggle('hidden');
+    }
+
+    function saveSettings() {
+      ocrSettings.engine = document.getElementById('ocrEngineSelect').value;
+      ocrSettings.ocrSpaceKey = document.getElementById('ocrSpaceApiKey').value.trim() || 'K87037096588957';
+      ocrSettings.geminiKey = document.getElementById('geminiApiKey').value.trim();
+
+      localStorage.setItem('gate_rekap_ocr_settings', JSON.stringify(ocrSettings));
+      toggleSettingsModal();
+      showToast('Pengaturan mesin OCR disimpan');
+    }
+
+    function triggerFileSelect() {
+      document.getElementById('gateImageInput').click();
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        rawUploadedBase64 = event.target.result;
+        selectedImageBase64 = rawUploadedBase64;
+        displayImagePreview(selectedImageBase64);
+        
+        if (!appData[activeGate]) appData[activeGate] = getEmptyGateObj();
+        appData[activeGate].image = selectedImageBase64;
+        saveDataAndCalculate();
+
+        openCropModal();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function displayImagePreview(src) {
+      const img = document.getElementById('imagePreview');
+      const placeholder = document.getElementById('imagePlaceholder');
+      const cropBtn = document.getElementById('btnCropTrigger');
+
+      if (src) {
+        img.src = src;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        if (cropBtn) cropBtn.classList.remove('hidden');
+      } else {
+        img.src = '';
+        img.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        if (cropBtn) cropBtn.classList.add('hidden');
+      }
+    }
+
+    function openCropModal() {
+      if (!rawUploadedBase64 && !selectedImageBase64) return;
+
+      const modal = document.getElementById('cropModal');
+      const cropImg = document.getElementById('cropperImage');
+      cropImg.src = rawUploadedBase64 || selectedImageBase64;
+
+      modal.classList.remove('hidden');
+
+      if (cropperInstance) {
+        cropperInstance.destroy();
+      }
+
+      setTimeout(() => {
+        cropperInstance = new Cropper(cropImg, {
+          viewMode: 1,
+          autoCropArea: 0.85,
+          responsive: true,
+          restore: false
+        });
+      }, 100);
+    }
+
+    function closeCropModal() {
+      document.getElementById('cropModal').classList.add('hidden');
+      if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+      }
+    }
+
+    function applyCroppedImage() {
+      if (!cropperInstance) return;
+
+      const croppedCanvas = cropperInstance.getCroppedCanvas({
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+      });
+
+      if (croppedCanvas) {
+        selectedImageBase64 = croppedCanvas.toDataURL('image/jpeg', 0.92);
+        displayImagePreview(selectedImageBase64);
+
+        if (!appData[activeGate]) appData[activeGate] = getEmptyGateObj();
+        appData[activeGate].image = selectedImageBase64;
+        saveDataAndCalculate();
+
+        showToast('Foto berhasil dipotong!');
+      }
+
+      closeCropModal();
+    }
+
+    async function processImageOCR() {
+      if (!selectedImageBase64) {
+        triggerFileSelect();
+        return;
+      }
+
+      showScanStatus(true, 'Mengirim ke OCR.Space Engine 2...');
+
+      try {
+        if (ocrSettings.engine === 'ocrspace') {
+          await runOCRSpace(selectedImageBase64);
+        } else if (ocrSettings.engine === 'gemini' && ocrSettings.geminiKey) {
+          showScanStatus(true, 'Menghubungi Gemini AI Vision...');
+          await runGeminiOCR(selectedImageBase64);
+        } else {
+          showScanStatus(true, 'Menjalankan Pemindai Region Lokal...');
+          await runTesseractRegionOCR(selectedImageBase64);
+        }
+      } catch (err) {
+        console.warn("OCR Error, beralih ke Pemindai Region Lokal:", err);
+        showScanStatus(true, 'Menggunakan Pemindai Region Lokal...');
+        await runTesseractRegionOCR(selectedImageBase64);
+      } finally {
+        showScanStatus(false);
+      }
+    }
+
+    function showScanStatus(show, msg = '') {
+      const container = document.getElementById('scanStatus');
+      const text = document.getElementById('scanStatusMsg');
+      if (show) {
+        text.innerText = msg;
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    /* OCR.SPACE ENGINE INTEGRATION */
+    async function runOCRSpace(base64Data) {
+      const formData = new FormData();
+      formData.append("base64Image", base64Data);
+      formData.append("language", "eng");
+      formData.append("isOverlayRequired", "false");
+      formData.append("OCREngine", "2");
+      formData.append("apikey", ocrSettings.ocrSpaceKey || 'K87037096588957');
+
+      const response = await fetch("https://api.ocr.space/parse/image", {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await response.json();
+      if (result && result.ParsedResults && result.ParsedResults.length > 0) {
+        const fullText = result.ParsedResults[0].ParsedText || '';
+        parseTextToGate(fullText);
+        showToast('Ekstraksi OCR.Space Berhasil!');
+      } else {
+        throw new Error('Hasil OCR.Space kosong');
+      }
+    }
+
+    /* GEMINI VISION AI INTEGRATION */
+    async function runGeminiOCR(base64Data) {
+      const cleanBase64 = base64Data.split(',')[1];
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${ocrSettings.geminiKey}`;
+
+      const payload = {
+        contents: [{
+          parts: [
+            { text: "Ekstrak data layar gate berikut ke format JSON persis:\n{\"qr_1\":\"\",\"qr_2\":\"\",\"qr_3\":\"\",\"t_b1\":\"\",\"t_b2\":\"\",\"t_s\":\"\",\"t_out\":\"\",\"k_1\":\"\",\"k_2\":\"\"}" },
+            { inline_data: { mime_type: "image/jpeg", data: cleanBase64 } }
+          ]
+        }]
+      };
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+        const txt = data.candidates[0].content.parts[0].text;
+        const jsonMatch = txt.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          applyParsedDataToInputs(parsed);
+          showToast('Ekstraksi Gemini AI Berhasil!');
+          return;
+        }
+      }
+      throw new Error("Gagal parsing JSON Gemini");
+    }
+
+    /* TESSERACT REGION FALLBACK */
+    async function runTesseractRegionOCR(base64Data) {
+      const img = new Image();
+      img.src = base64Data;
+      await img.decode();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      const worker = await Tesseract.createWorker('eng');
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789QRTIK+/:'
+      });
+
+      const ret = await worker.recognize(canvas);
+      await worker.terminate();
+
+      parseTextToGate(ret.data.text || '');
+      showToast('Ekstraksi Pemindai Lokal Selesai');
+    }
+
+    // PARSER SANGAT FLEKSIBEL DENGAN LOGIKA ESTIMASI K UNTUK FOTO GELAP / KETUTUP
+    function parseTextToGate(text) {
+      const cleanText = text.replace(/[Oo]/g, '0')
+                            .replace(/[Iil|]/g, '1')
+                            .replace(/[Ss]/g, '5')
+                            .replace(/[Zz]/g, '2');
+
+      const lines = cleanText.split('\n');
+
+      let parsed = {
+        qr_1: '', qr_2: '', qr_3: '',
+        t_b1: '', t_b2: '', t_s: '', t_out: '',
+        k_1: '', k_2: ''
+      };
+
+      lines.forEach((line) => {
+        const uppercaseLine = line.toUpperCase().trim();
+        const nums = uppercaseLine.match(/\d+/g) || [];
+
+        // 1. BARIS QR
+        if ((uppercaseLine.includes('QR') || uppercaseLine.includes('Q:') || uppercaseLine.includes('0R') || uppercaseLine.includes('CR')) && nums.length >= 3) {
+          parsed.qr_1 = padZero(nums[0], 4);
+          parsed.qr_2 = padZero(nums[1], 4);
+          parsed.qr_3 = padZero(nums[2], 4);
+        } else if (parsed.qr_1 === '' && nums.length === 3 && (uppercaseLine.includes('+') || uppercaseLine.includes('/'))) {
+          parsed.qr_1 = padZero(nums[0], 4);
+          parsed.qr_2 = padZero(nums[1], 4);
+          parsed.qr_3 = padZero(nums[2], 4);
+        }
+
+        // 2. BARIS T
+        if ((uppercaseLine.includes('T:') || uppercaseLine.startsWith('T')) && nums.length >= 4) {
+          parsed.t_b1 = padZero(nums[0], 4);
+          parsed.t_b2 = padZero(nums[1], 4);
+          parsed.t_s = padZero(nums[2], 4);
+          parsed.t_out = padZero(nums[3], 4);
+        } else if (parsed.t_b1 === '' && nums.length >= 4) {
+          parsed.t_b1 = padZero(nums[0], 4);
+          parsed.t_b2 = padZero(nums[1], 4);
+          parsed.t_s = padZero(nums[2], 4);
+          parsed.t_out = padZero(nums[3], 4);
+        }
+
+        // 3. BARIS K
+        if ((uppercaseLine.includes('K:') || uppercaseLine.startsWith('K')) && nums.length >= 1) {
+          parsed.k_1 = padZero(nums[0], 4);
+          parsed.k_2 = nums.length >= 2 ? padZero(nums[1], 4) : '0000';
+        } else if (parsed.k_1 === '' && nums.length === 2 && uppercaseLine.includes('/')) {
+          parsed.k_1 = padZero(nums[0], 4);
+          parsed.k_2 = padZero(nums[1], 4);
+        }
+      });
+
+      // SMART FALLBACK: Jika baris K tertutup bayangan (kosong), hitung estimasi berdasarkan Total Tap (T1 + T2 + S)
+      if (parsed.k_1 === '' && parsed.t_b1 !== '') {
+        const sumT = (parseInt(parsed.t_b1) || 0) + (parseInt(parsed.t_b2) || 0) + (parseInt(parsed.t_s) || 0);
+        parsed.k_1 = padZero(sumT, 4);
+        parsed.k_2 = '0000';
+        showToast('Baris K tertutup gelap. K1 diestimasi dari total Tap (T)');
+      }
+
+      applyParsedDataToInputs(parsed);
+    }
+
+    function applyParsedDataToInputs(data) {
+      const setVal = (id, key) => {
+        if (data[key] !== undefined) {
+          document.getElementById(id).value = data[key] !== '' ? padZero(data[key], 4) : '';
+        }
+      };
+
+      setVal('qr_1', 'qr_1'); setVal('qr_2', 'qr_2'); setVal('qr_3', 'qr_3');
+      setVal('t_b1', 't_b1'); setVal('t_b2', 't_b2'); setVal('t_s', 't_s'); setVal('t_out', 't_out');
+      setVal('k_1', 'k_1'); setVal('k_2', 'k_2');
+
+      saveCurrentInput();
+    }
+
+    function renderGateTabs() {
+      const container = document.getElementById('gateTabsContainer');
+      container.innerHTML = '';
+
+      for (let i = 1; i <= maxUnlockedGate; i++) {
+        const btn = document.createElement('button');
+        const isActive = i === activeGate;
+        const hasData = checkGateHasData(i);
+
+        btn.className = `interactive-btn flex-shrink-0 px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition ${
+          isActive 
+            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md border border-emerald-400/50' 
+            : 'bg-slate-800/90 text-slate-400 hover:bg-slate-700/90 border border-slate-700/80'
+        }`;
+
+        btn.onclick = () => trySelectGate(i);
+        btn.innerHTML = `
+          <span>GATE ${i}</span>
+          ${hasData ? `<span class="w-2 h-2 rounded-full ${isActive ? 'bg-amber-300' : 'bg-emerald-400'}"></span>` : ''}
+        `;
+
+        container.appendChild(btn);
+      }
+    }
+
+    function checkGateHasData(gateNum) {
+      const g = appData[gateNum];
+      if (!g) return false;
+      return Object.keys(g).some(k => k !== 'image' && g[k] !== '' && g[k] !== 0 && g[k] !== '0');
+    }
+
+    function trySelectGate(targetGate) {
+      if (targetGate === activeGate) return;
+      if (targetGate > activeGate && !checkGateHasData(activeGate)) {
+        pendingTargetGate = targetGate;
+        openEmptyGateModal(activeGate, targetGate);
+        return;
+      }
+      selectGate(targetGate);
+    }
+
+    function selectGate(gateNum) {
+      activeGate = gateNum;
+      if (activeGate + 1 > maxUnlockedGate) {
+        maxUnlockedGate = activeGate + 1;
+      }
+
+      if (!appData[activeGate]) appData[activeGate] = getEmptyGateObj();
+
+      document.getElementById('activeGateLabel').innerText = `GATE ${activeGate}`;
+      document.getElementById('screenGateTitle').innerText = `GATE ${activeGate}`;
+      document.getElementById('scanGateTitle').innerText = `GATE ${activeGate}`;
+
+      document.getElementById('btnPrevGate').disabled = (activeGate === 1);
+      document.getElementById('btnPrevGate').classList.toggle('opacity-40', activeGate === 1);
+
+      loadGateDataToInputs(activeGate);
+      selectedImageBase64 = appData[activeGate].image || null;
+      rawUploadedBase64 = selectedImageBase64;
+      displayImagePreview(selectedImageBase64);
+
+      renderGateTabs();
+    }
+
+    function changeGate(dir) {
+      const target = activeGate + dir;
+      if (target >= 1) trySelectGate(target);
+    }
+
+    function openEmptyGateModal(currentGateNum, targetGateNum) {
+      document.getElementById('emptyGateModalGateNum').innerText = currentGateNum;
+      document.getElementById('emptyGateModalGateNumText').innerText = currentGateNum;
+      document.getElementById('emptyGateModalTargetNum').innerText = targetGateNum;
+      document.getElementById('emptyGateModal').classList.remove('hidden');
+    }
+
+    function closeEmptyGateModal() {
+      document.getElementById('emptyGateModal').classList.add('hidden');
+      pendingTargetGate = null;
+    }
+
+    function proceedToTargetGate() {
+      const target = pendingTargetGate;
+      closeEmptyGateModal();
+      if (target) selectGate(target);
+    }
+
+    function loadGateDataToInputs(gateNum) {
+      const g = appData[gateNum] || getEmptyGateObj();
+      document.getElementById('qr_1').value = g.qr_1 || '';
+      document.getElementById('qr_2').value = g.qr_2 || '';
+      document.getElementById('qr_3').value = g.qr_3 || '';
+
+      document.getElementById('t_b1').value = g.t_b1 || '';
+      document.getElementById('t_b2').value = g.t_b2 || '';
+      document.getElementById('t_s').value = g.t_s || '';
+      document.getElementById('t_out').value = g.t_out || '';
+
+      document.getElementById('k_1').value = g.k_1 || '';
+      document.getElementById('k_2').value = g.k_2 || '';
+    }
+
+    function saveCurrentInput() {
+      appData[activeGate] = {
+        qr_1: document.getElementById('qr_1').value,
+        qr_2: document.getElementById('qr_2').value,
+        qr_3: document.getElementById('qr_3').value,
+
+        t_b1: document.getElementById('t_b1').value,
+        t_b2: document.getElementById('t_b2').value,
+        t_s: document.getElementById('t_s').value,
+        t_out: document.getElementById('t_out').value,
+
+        k_1: document.getElementById('k_1').value,
+        k_2: document.getElementById('k_2').value,
+        image: selectedImageBase64
+      };
+
+      saveDataAndCalculate();
+      renderGateTabs();
+    }
+
+    function setupAutoAdvanceListeners() {
+      const inputs = document.querySelectorAll('.auto-advance');
+      inputs.forEach(input => {
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const nextId = this.getAttribute('data-next');
+            if (nextId === 'NEXT_GATE') {
+              trySelectGate(activeGate + 1);
+              setTimeout(() => {
+                const qr1 = document.getElementById('qr_1');
+                if (qr1) qr1.focus();
+              }, 50);
+            } else if (nextId) {
+              const nextEl = document.getElementById(nextId);
+              if (nextEl) nextEl.focus();
+            }
+          }
+        });
+      });
+    }
+
+    function clearCurrentGate() {
+      appData[activeGate] = getEmptyGateObj();
+      selectedImageBase64 = null;
+      rawUploadedBase64 = null;
+      displayImagePreview(null);
+      loadGateDataToInputs(activeGate);
+      saveDataAndCalculate();
+      renderGateTabs();
+      showToast(`Data GATE ${activeGate} dibersihkan`);
+    }
+
+    function saveDataAndCalculate() {
+      localStorage.setItem('gate_rekap_data_app', JSON.stringify(appData));
+
+      let sum_B = 0, sum_S = 0, sum_QR1 = 0, sum_QR2 = 0, sum_OUT = 0, sum_K2 = 0;
+
+      Object.keys(appData).forEach(i => {
+        const g = appData[i];
+        if (!g) return;
+        const val = (v) => parseFloat(v) || 0;
+
+        sum_B += (val(g.t_b1) + val(g.t_b2));
+        sum_S += val(g.t_s);
+        sum_QR1 += (val(g.qr_1) + val(g.qr_2));
+        sum_QR2 += val(g.qr_3);
+        sum_OUT += val(g.t_out);
+        sum_K2 += val(g.k_2);
+      });
+
+      const sum_T = sum_B + sum_S;
+      const sum_K1 = sum_T + sum_OUT - sum_K2;
+
+      renderBreakdownTable();
+      updateWAPreview();
+    }
+
+    function renderBreakdownTable() {
+      const tbody = document.getElementById('breakdownTableBody');
+      tbody.innerHTML = '';
+
+      for (let i = 1; i <= maxUnlockedGate; i++) {
+        const g = appData[i] || getEmptyGateObj();
+        const val = (v) => parseFloat(v) || 0;
+
+        const b = val(g.t_b1) + val(g.t_b2);
+        const s = val(g.t_s);
+        const qr1 = val(g.qr_1) + val(g.qr_2);
+        const qr2 = val(g.qr_3);
+        const out = val(g.t_out);
+        const k2 = val(g.k_2);
+
+        const row = document.createElement('tr');
+        row.className = i % 2 === 0 ? 'bg-slate-800/40' : 'bg-transparent';
+        row.innerHTML = `
+          <td class="p-2 text-center font-bold text-emerald-400">G${i}</td>
+          <td class="p-2 text-center">${b}</td>
+          <td class="p-2 text-center">${s}</td>
+          <td class="p-2 text-center">${qr1}/${qr2}</td>
+          <td class="p-2 text-center">${out}</td>
+          <td class="p-2 text-center">${padZero(k2, 4)}</td>
+          <td class="p-2 text-center">
+            <button onclick="trySelectGate(${i})" class="bg-emerald-950 text-emerald-400 border border-emerald-700/50 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-emerald-900">Edit</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      }
+    }
+
+    function toggleBreakdownTable() {
+      const container = document.getElementById('breakdownContainer');
+      const label = document.getElementById('btnToggleBreakdownLabel');
+      container.classList.toggle('hidden');
+      label.innerText = container.classList.contains('hidden') ? 'Lihat Tabel' : 'Tutup Tabel';
+    }
+
+    function padZero(num, length = 4) {
+      if (num === '' || num === undefined || num === null) return '';
+      return String(num).padStart(length, '0');
+    }
+
+    function getFormattedWAText() {
+      let sum_B = 0, sum_S = 0, sum_QR1 = 0, sum_QR2 = 0, sum_OUT = 0, sum_K2 = 0;
+
+      Object.keys(appData).forEach(i => {
+        const g = appData[i];
+        if (!g) return;
+        const val = (v) => parseFloat(v) || 0;
+        sum_B += (val(g.t_b1) + val(g.t_b2));
+        sum_S += val(g.t_s);
+        sum_QR1 += (val(g.qr_1) + val(g.qr_2));
+        sum_QR2 += val(g.qr_3);
+        sum_OUT += val(g.t_out);
+        sum_K2 += val(g.k_2);
+      });
+
+      const sum_T = sum_B + sum_S;
+      const sum_K1 = sum_T + sum_OUT - sum_K2;
+      const formattedK2 = padZero(sum_K2, 4);
+
+      let headerBlock = '';
+      const halte = (headerInfo.halte || '').trim();
+      const jam = (headerInfo.jam || '').trim();
+
+      if (halte || jam) {
+        headerBlock = `${halte} ${jam}`.trim() + '\n\n';
+      }
+
+      return `${headerBlock}T   : ${sum_T}\nB   : ${sum_B}\nS   : ${sum_S}\nQr  : ${sum_QR1}/${sum_QR2}\nOut : ${sum_OUT}\nK   : ${sum_K1}/${formattedK2}`;
+    }
+
+    function updateWAPreview() {
+      const preview = document.getElementById('waPreviewText');
+      if (preview) {
+        preview.textContent = getFormattedWAText();
+      }
+    }
+
+    function sendToWhatsApp() {
+      const text = getFormattedWAText();
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+
+    function copyToClipboard() {
+      const text = getFormattedWAText();
+      const dummy = document.createElement("textarea");
+      document.body.appendChild(dummy);
+      dummy.value = text;
+      dummy.select();
+      document.execCommand("copy");
+      document.body.removeChild(dummy);
+
+      showToast('Teks pesan WA berhasil disalin!');
+    }
+
+    function openConfirmResetModal() {
+      document.getElementById('confirmResetModal').classList.remove('hidden');
+    }
+
+    function closeConfirmResetModal() {
+      document.getElementById('confirmResetModal').classList.add('hidden');
+    }
+
+    function executeResetAllGates() {
+      closeConfirmResetModal();
+      createEmptyAppData();
+      maxUnlockedGate = 2;
+      saveDataAndCalculate();
+      selectGate(1);
+      showToast('Semua data berhasil direset');
+    }
+
+    function toggleHelpModal() {
+      document.getElementById('helpModal').classList.toggle('hidden');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    window.onload = function() {
+      initAppData();
+      setupAutoAdvanceListeners();
+      selectGate(1);
+      saveDataAndCalculate();
+    };
+  </script>
+</body>
+</html>
